@@ -3,7 +3,6 @@
 #include "Game.h"
 #include "Input.h"
 
-
 struct GameSettings
 {
 	int gameWidth = 64;
@@ -31,7 +30,6 @@ private:
 	HDC m_hdc;
 	HWND m_window;
 	bool m_running = true;
-	bool m_initialized = false;
 	Renderer* m_pRenderer;
 	Game* m_pGame;
 	Input* m_pInput;

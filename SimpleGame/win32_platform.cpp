@@ -1,9 +1,8 @@
 #include "win32_platform.h"
-
 #include <iostream>
 #include <ostream>
 
-
+#include "LevelGenerator.h"
 
 LRESULT CALLBACK Win32Platform::WindowCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -81,8 +80,8 @@ Win32Platform::Win32Platform(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 	freopen("CONOUT$", "w", stdout);
 	freopen("CONOUT$", "w", stderr);
 
-    m_pGame = new Game(gameSettings.gameWidth, gameSettings.gameHeight);
-    //m_pRenderer = new Renderer(m_gameWidth, m_gameHeight, &m_pGame->GetGameState());
+    m_pGame = new Game(gameSettings.gameWidth, gameSettings.gameHeight, 
+        LevelGenerator::Generate(gameSettings.gameWidth, gameSettings.gameHeight, 55,8));
     m_pInput = new Input(m_window, m_pGame);
 
 	// Use HeapSetInformation to specify that the process should
@@ -94,54 +93,24 @@ Win32Platform::Win32Platform(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 
 	if (SUCCEEDED(CoInitialize(NULL)))
 	{
+		m_pRenderer = new Renderer(m_pGame->GetGameState());
+		if (SUCCEEDED(m_pRenderer->Initialize()))
 		{
-			m_pRenderer = new Renderer(m_pGame->GetGameState());
-			if (SUCCEEDED(m_pRenderer->Initialize()))
-			{
-                lastFrameTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-                m_initialized = true;
+            lastFrameTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 
-                while (IsRunning())
-                {
-                    Update();
-                }
-                //renderer.RunMessageLoop();
-			}
+            while (IsRunning())
+            {
+                Update();
+            }
 		}
 		CoUninitialize();
 	}
-;
 }
 
-
-bool Win32Platform::IsRunning()
+void Win32Platform::Update()
 {
-	return m_running;
-}
-
-bool Win32Platform::IsInitialized()
-{
-	return m_initialized;
-}
-
-void Win32Platform::StopRunning()
-{
-	m_running = false;
-}
-
-//void Win32Platform::Resize() 
-//{
-//	m_pRenderer->UpdateRenderState(m_window, m_gameWidth, m_gameHeight);
-//	m_pRenderer->ClearFullWindow(GetDC(m_window), 0x000000);
-//	m_pRenderer->DrawGrid(m_pGame->GetMap(), false);
-//}
-
-void Win32Platform::Update() 
-{
-	if (!IsInitialized()) return; // don't update until initialized
-
-	// Input
-	m_pInput->Update();
+    // Input
+    m_pInput->Update();
 
     long long now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
     if (now - lastFrameTime >= frameLength)
@@ -152,10 +121,18 @@ void Win32Platform::Update()
         // Render
         m_pRenderer->Update(m_pGame->GetGameState());
 
-        // Draw
-        //m_pRenderer->OnRender();
-
         lastFrameTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-        std::cout << "Tick" << std::endl;
     }
 }
+
+
+bool Win32Platform::IsRunning()
+{
+	return m_running;
+}
+
+void Win32Platform::StopRunning()
+{
+	m_running = false;
+}
+

@@ -31,7 +31,7 @@ void Input::Update()
 					if (GetAsyncKeyState(VK_LEFT) || GetAsyncKeyState(0x41)) m_pGame->MovePlayer(Direction::Left);
 					if (GetAsyncKeyState(VK_RIGHT) || GetAsyncKeyState(0x44)) m_pGame->MovePlayer(Direction::Right);
 				}
-				if (GetAsyncKeyState(VK_SPACE)) m_pGame->Regenerate(55, 8);
+				//if (GetAsyncKeyState(VK_SPACE)) m_pGame->Regenerate(55, 8);
 
 				break;
 			}

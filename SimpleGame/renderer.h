@@ -85,9 +85,10 @@ public:
 	void DrawRectTexture(int xPos, int yPos, int width, int height, TextureId textureId) const;
 	static int RandomFloor();
 	vector<vector<int>> GenerateTextureMap(vector<vector<int>>);
-	void DrawGrid(vector<vector<int>> grid, bool drawChangesOnly);
+	void DrawGrid(vector<vector<int>> grid);
 	void Update(const GameState* pGameState);
 	void Render(HDC hdc) const;
+	void TriggerFullRedraw();
 	
 	// Draw content.
 	HRESULT OnRender();
@@ -129,6 +130,7 @@ private:
 	int m_textureSize = 8;
 	RenderState m_renderState = {};
 	GameState* m_pGameState;
+	bool fullRedraw = false;
 
 	void LoadTexture(TextureId texture, const char* name);
 

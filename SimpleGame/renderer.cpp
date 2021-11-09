@@ -45,8 +45,7 @@ HRESULT Renderer::Initialize()
 {
 	HRESULT hr;
 
-	// Initialize device-indpendent resources, such
-		// as the Direct2D factory.
+	// Initialize device-indpendent resources, such as the Direct2D factory.
 	hr = CreateDeviceIndependentResources();
 
 	if (SUCCEEDED(hr))
@@ -65,17 +64,8 @@ HRESULT Renderer::Initialize()
 
 		RegisterClassEx(&wcex);
 
-
-		// Because the CreateWindow function takes its size in pixels,
-		// obtain the system DPI and use it to scale the window size.
 		FLOAT dpiX = (FLOAT)GetDpiForWindow(GetDesktopWindow());
 		FLOAT dpiY = dpiX;
-
-		// The factory returns the current system DPI. This is also the value it will use
-		// to create its own windows.
-		//m_pDirect2dFactory->GetDesktopDpi(&dpiX, &dpiY);
-		//GetDpiForSystem();
-
 
 		// Create the window.
 		m_hwnd = CreateWindow(
@@ -228,42 +218,17 @@ vector<vector<int>> Renderer::GenerateTextureMap(vector<vector<int>> grid)
 	return map;
 }
 
-// single pixel rendering
-//void Renderer::DrawGrid(vector<vector<int>> grid)
-//{
-//	for (int y = 0; y < grid.size(); y++)
-//	{
-//		for (int x = 0; x < grid[y].size(); x++)
-//		{
-//			unsigned int* pixel = (unsigned int*)m_renderState.memory + x + y * m_renderState.width;
-//			*pixel = colors[grid[y][x]];
-//		}
-//	}
-//}
-
-void Renderer::DrawGrid(vector<vector<int>> grid, bool drawChangesOnly)
+void Renderer::DrawGrid(vector<vector<int>> grid)
 {
 	vector<vector<int>> textureGrid = GenerateTextureMap(grid);
 
-	/*if (!drawChangesOnly)
+	for (int y = 0; y < textureGrid.size(); y++)
 	{
-		for (int y = 0; y < textureGrid.size(); y++)
+		for (int x = 0; x < textureGrid[y].size(); x++)
 		{
-			for (int x = 0; x < textureGrid[y].size(); x++)
-			{
-				DrawRectTexture(x * m_textureSize, y * m_textureSize, m_textureSize, m_textureSize, static_cast<TextureId>(textureGrid[y][x]));
-			}
-		}
-	}
-	else
-	{*/
-		for (const pair<int, int> &tileToUpdate : m_tilesToUpdate)
-		{
-			int x = tileToUpdate.first;
-			int y = tileToUpdate.second;
 			DrawRectTexture(x * m_textureSize, y * m_textureSize, m_textureSize, m_textureSize, static_cast<TextureId>(textureGrid[y][x]));
 		}
-	//}
+	}
 }
 
 void Renderer::Render(HDC hdc) const
@@ -291,12 +256,14 @@ void Renderer::Render(HDC hdc) const
 	std::cout << "duration: " << (end - start) << "ms" << std::endl;
 }
 
+void Renderer::TriggerFullRedraw()
+{
+	fullRedraw = true;
+}
+
 HRESULT Renderer::OnRender()
 {
-	//DrawRectTexture(0,0, m_textureSize, m_textureSize, WallTop);
-
 	HRESULT hr = S_OK;
-
 	hr = CreateDeviceResources();
 
 	if (SUCCEEDED(hr))
@@ -382,7 +349,6 @@ HRESULT Renderer::CreateDeviceResources()
 			&m_pRenderTarget
 		);
 
-
 		if (SUCCEEDED(hr))
 		{
 			// Create a gray brush.
@@ -415,12 +381,7 @@ void Renderer::OnResize(UINT width, UINT height)
 {
 	if (m_pRenderTarget)
 	{
-		// Note: This method can fail, but it's okay to ignore the
-		// error here, because the error will be returned again
-		// the next time EndDraw is called.
-
 		UpdateRenderState();
-
 		m_pRenderTarget->Resize(D2D1::SizeU(width, height));
 	}
 	std::cout << "OnResize" << std::endl;
@@ -465,7 +426,9 @@ void Renderer::Update(const GameState* pGameState)
 {
 	m_tilesToUpdate = pGameState->changedTiles;
 
-	DrawGrid(pGameState->map, false);
+	DrawGrid(pGameState->map);
+	fullRedraw = false;
+
 	DrawRectTexture(pGameState->playerX * m_textureSize, pGameState->playerY * m_textureSize, m_textureSize, m_textureSize, Player);
 
 	for (const Enemy &enemy : pGameState->enemies)
