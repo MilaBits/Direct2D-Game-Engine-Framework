@@ -1,8 +1,12 @@
 #include "win32_platform.h"
 #include <iostream>
 #include <ostream>
-
 #include "LevelGenerator.h"
+using namespace std::chrono;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using std::chrono::seconds;
+using std::chrono::system_clock;
 
 LRESULT CALLBACK Win32Platform::WindowCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -96,7 +100,7 @@ Win32Platform::Win32Platform(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 		m_pRenderer = new Renderer(m_pGame->GetGameState());
 		if (SUCCEEDED(m_pRenderer->Initialize()))
 		{
-            lastFrameTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+            lastFrameTime = time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count();
 
             while (IsRunning())
             {
@@ -112,7 +116,7 @@ void Win32Platform::Update()
     // Input
     m_pInput->Update();
 
-    long long now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+    long long now = time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count();
     if (now - lastFrameTime >= frameLength)
     {
         // Simulate
@@ -121,7 +125,7 @@ void Win32Platform::Update()
         // Render
         m_pRenderer->Update(m_pGame->GetGameState());
 
-        lastFrameTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+        lastFrameTime = now;
     }
 }
 

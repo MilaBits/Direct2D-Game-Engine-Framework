@@ -84,8 +84,8 @@ public:
 	void DrawRect(int xPos, int yPos, int width, int height, unsigned int color) const;
 	void DrawRectTexture(int xPos, int yPos, int width, int height, TextureId textureId) const;
 	static int RandomFloor();
-	vector<vector<int>> GenerateTextureMap(vector<vector<int>>);
-	void DrawGrid(vector<vector<int>> grid);
+	vector<vector<int>> GenerateTextureMap(vector<vector<int>>) const;
+	void DrawGrid(vector<vector<int>> grid) const;
 	void Update(const GameState* pGameState);
 	void Render(HDC hdc) const;
 	

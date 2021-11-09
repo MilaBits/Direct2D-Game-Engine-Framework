@@ -6,7 +6,7 @@
 struct GameSettings
 {
 	int gameWidth = 64;
-	int gameHeight = 32;
+	int gameHeight = 36;
 };
 
 class Win32Platform
@@ -35,5 +35,5 @@ private:
 	Input* m_pInput;
 
 	long long lastFrameTime;
-	int frameLength = 16;
+	int frameLength = 100;
 };

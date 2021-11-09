@@ -106,13 +106,6 @@ void Renderer::UpdateRenderState()
 
 	if (m_renderState.memory) VirtualFree(m_renderState.memory, 0, MEM_RELEASE);
 	m_renderState.memory = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
-	m_renderState.bitmapInfo.bmiHeader.biSize = sizeof(m_renderState.bitmapInfo.bmiHeader);
-	m_renderState.bitmapInfo.bmiHeader.biWidth = m_renderState.width;
-	m_renderState.bitmapInfo.bmiHeader.biHeight = m_renderState.height;
-	m_renderState.bitmapInfo.bmiHeader.biPlanes = 1;
-	m_renderState.bitmapInfo.bmiHeader.biBitCount = 32;
-	m_renderState.bitmapInfo.bmiHeader.biCompression = BI_RGB;
 }
 
 void Renderer::InitFloorTextures(int width, int height)
@@ -127,33 +120,6 @@ void Renderer::InitFloorTextures(int width, int height)
 	}
 }
 
-void Renderer::RenderBackground() const
-{
-	unsigned int* pixel = static_cast<unsigned*>(m_renderState.memory);
-	for (int y = 0; y < m_renderState.height; y++)
-	{
-		for (int x = 0; x < m_renderState.width; x++)
-		{
-			unsigned int color;
-			if (x % 2 == 0 && y % 2 == 0) color = 0x000000;
-			else color = 0xffffff;
-			*pixel++ = color;
-		}
-	}
-}
-
-void Renderer::ClearScreen(unsigned int color) const
-{
-	unsigned int* pixel = static_cast<unsigned*>(m_renderState.memory);
-	for (int y = 0; y < m_renderState.height; y++)
-	{
-		for (int x = 0; x < m_renderState.width; x++)
-		{
-			*pixel++ = color;
-		}
-	}
-}
-
 void Renderer::DrawRect(int xPos, int yPos, int width, int height, unsigned int color) const
 {
 	for (int y = yPos; y < Utils::Clamp(0, yPos + height, m_renderState.height); y++)
@@ -161,7 +127,8 @@ void Renderer::DrawRect(int xPos, int yPos, int width, int height, unsigned int 
 		unsigned int* pixel = static_cast<unsigned*>(m_renderState.memory) + xPos + y * m_renderState.width;
 		for (int x = xPos; x < Utils::Clamp(0, xPos + width, m_renderState.width); x++)
 		{
-			*pixel++ = color;
+			*pixel = color;
+			*pixel++;
 		}
 	}
 }
@@ -180,11 +147,9 @@ void Renderer::DrawRectTexture(int xPos, int yPos, int width, int height, Textur
 		for (int x = xPos; x < Utils::Clamp(0, xPos + width, m_renderState.width); x++)
 		{
 			int transparency = texture[index] >> (8*3) & 0xff;
-			//*pixel++ = transparency == 0xff ? texture[index] : m_textures.at(m_floorTextures[yTile][xTile])[index]; // Reliable when on floor (not future proof)
-			//*pixel++ = transparency == 0xff ? texture[index] : *static_cast<unsigned*>(m_renderState.memory) + xPos + (y * m_renderState.width) + x;
-			//												   ^ Funky colors? why??
-			if (transparency == 0xff) *pixel++ = texture[index];
+			if (transparency == 0xff) *pixel = texture[index];
 
+			*pixel++;
 			index++;
 		}
 	}
@@ -195,7 +160,7 @@ int Renderer::RandomFloor()
 	return 1+ rand() % 4;
 }
 
-vector<vector<int>> Renderer::GenerateTextureMap(vector<vector<int>> grid)
+vector<vector<int>> Renderer::GenerateTextureMap(vector<vector<int>> grid) const
 {
 	vector<vector<int>> map = grid;
 
@@ -218,7 +183,7 @@ vector<vector<int>> Renderer::GenerateTextureMap(vector<vector<int>> grid)
 	return map;
 }
 
-void Renderer::DrawGrid(vector<vector<int>> grid)
+void Renderer::DrawGrid(vector<vector<int>> grid) const
 {
 	vector<vector<int>> textureGrid = GenerateTextureMap(grid);
 
@@ -229,31 +194,6 @@ void Renderer::DrawGrid(vector<vector<int>> grid)
 			DrawRectTexture(x * m_textureSize, y * m_textureSize, m_textureSize, m_textureSize, static_cast<TextureId>(textureGrid[y][x]));
 		}
 	}
-}
-
-void Renderer::Render(HDC hdc) const
-{
-	const int wWidth = m_renderState.clientRect.right - m_renderState.clientRect.left;
-	const int wHeight = m_renderState.clientRect.bottom - m_renderState.clientRect.top;
-
-	const float widthRatio = static_cast<float>(wWidth / m_renderState.width);
-	const float heightRatio = static_cast<float>(wHeight / m_renderState.height);
-
-	const float bestRatio = widthRatio < heightRatio ? widthRatio : heightRatio;
-
-	const int width = static_cast<int>(bestRatio * m_renderState.width);
-	const int height = static_cast<int>(bestRatio * m_renderState.height);
-
-	const long long start = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-	// target
-	StretchDIBits(hdc, 
-		(wWidth - width) / 2, (wHeight - height) / 2, 
-		width, height, 
-		0, 0, 
-		m_renderState.width, m_renderState.height, 
-		m_renderState.memory, &m_renderState.bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
-	const long long end = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-	std::cout << "duration: " << (end - start) << "ms" << std::endl;
 }
 
 HRESULT Renderer::OnRender()
@@ -270,7 +210,6 @@ HRESULT Renderer::OnRender()
 		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Scale(1,-1, center));
 		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
-
 		ID2D1Bitmap* d2dBitmap;
 		D2D1_SIZE_U bitmapSize = D2D1::SizeU(m_renderState.width, m_renderState.height);
 		D2D1_BITMAP_PROPERTIES props;
@@ -280,10 +219,10 @@ HRESULT Renderer::OnRender()
 		m_pRenderTarget->CreateBitmap(bitmapSize, m_renderState.memory, m_renderState.width*4 , props, &d2dBitmap);
 
 		D2D1_RECT_F windowRect = { 0,0,rtSize.width, rtSize.height };
-		m_pRenderTarget->DrawBitmap(d2dBitmap, windowRect, 1, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR); //todo: make it not stretch
+		m_pRenderTarget->DrawBitmap(d2dBitmap, windowRect, 1, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
+		//todo: make it not stretch
 
 		hr = m_pRenderTarget->EndDraw();
-		std::cout << "OnRender"<<std::endl;
 	}
 
 	if (hr == D2DERR_RECREATE_TARGET)
@@ -301,17 +240,6 @@ void Renderer::ReleaseResources()
 	SafeRelease(&m_pRenderTarget);
 	SafeRelease(&m_pLightSlateGrayBrush);
 	SafeRelease(&m_pCornflowerBlueBrush);
-}
-
-void Renderer::RunMessageLoop()
-{
-	MSG msg;
-
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
 }
 
 HRESULT Renderer::CreateDeviceIndependentResources()
@@ -393,28 +321,12 @@ void Renderer::LoadTexture(TextureId texture, const char* name)
 	int size = width * height;
 	vector<unsigned int> textureData;
 
-	textureData.reserve(width * height);
-	for (int i = 0; i < width * height; i++)
+	textureData.reserve(size);
+	for (int i = 0; i < size; i++)
 	{
 		textureData.push_back(pixels[i]);
 	}
 	m_textures.insert({ texture, textureData });
-}
-
-void Renderer::ClearFullWindow(HDC hdc, unsigned int color) const
-{
-	ClearScreen(color);
-
-	const int wWidth = m_renderState.clientRect.right - m_renderState.clientRect.left;
-	const int wHeight = m_renderState.clientRect.bottom - m_renderState.clientRect.top;
-
-	StretchDIBits(hdc, 
-		0, 0, 
-		wWidth, wHeight, 
-		0, 0, 
-		m_renderState.width, m_renderState.height, 
-		m_renderState.memory, &m_renderState.bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
-
 }
 
 void Renderer::Update(const GameState* pGameState)

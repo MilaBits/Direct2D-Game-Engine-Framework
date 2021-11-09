@@ -33,37 +33,6 @@ bool Utils::GetGridTileValue(vector<vector<int>> grid, int xPos, int yPos, int* 
     return true;
 }
 
-//void Utils::ReadImage(const char* fileName, unsigned int** pixels, unsigned int* width, unsigned int* height, unsigned int* bytesPerPixel)
-//{
-//    FILE* imageFile = fopen(fileName, "rb");
-//    unsigned int dataOffset;
-//    fseek(imageFile, DATA_OFFSET_OFFSET, SEEK_SET);
-//    fread(&dataOffset, 4, 1, imageFile);
-//    fseek(imageFile, WIDTH_OFFSET, SEEK_SET);
-//    fread(width, 4, 1, imageFile);
-//    fseek(imageFile, HEIGHT_OFFSET, SEEK_SET);
-//    fread(height, 4, 1, imageFile);
-//    short bitsPerPixel;
-//    fseek(imageFile, BITS_PER_PIXEL_OFFSET, SEEK_SET);
-//    fread(&bitsPerPixel, 2, 1, imageFile);
-//    *bytesPerPixel = ((unsigned int)bitsPerPixel);
-//
-//    int paddedRowSize = (int)(4 * ceil((float)(*width) / 4.0f)) * (*bytesPerPixel);
-//    int unpaddedRowSize = (*width) * (*bytesPerPixel);
-//    int totalSize = unpaddedRowSize * (*height);
-//    *pixels = (unsigned int*)malloc(totalSize);
-//    int i = 0;
-//    unsigned int* currentRowPointer = *pixels + ((*height - 1) * unpaddedRowSize);
-//    for (i = 0; i < *height; i++)
-//    {
-//        fseek(imageFile, dataOffset + (i * paddedRowSize), SEEK_SET);
-//        fread(currentRowPointer, 1, unpaddedRowSize, imageFile);
-//        currentRowPointer -= unpaddedRowSize;
-//    }
-//
-//    fclose(imageFile);
-//}
-
 void Utils::ReadImage(const char* fileName, unsigned int** pixels, unsigned int* width, unsigned int* height, unsigned int* bytesPerPixel)
 {
     // Get file

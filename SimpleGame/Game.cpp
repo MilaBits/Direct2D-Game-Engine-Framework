@@ -65,7 +65,6 @@ void Game::MoveEntity(Entity& entity, Direction direction)
 	if (direction == Direction::Down	&& Passable(entity.xPos, entity.yPos - 1)) entity.yPos -= 1;
 	if (direction == Direction::Left	&& Passable(entity.xPos - 1, entity.yPos)) entity.xPos -= 1;
 	if (direction == Direction::Right	&& Passable(entity.xPos + 1, entity.yPos)) entity.xPos += 1;
-	std::cout << entity.xPos << "," << entity.yPos << std::endl;
 }
 
 void Game::Update()
