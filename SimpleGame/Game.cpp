@@ -1,6 +1,9 @@
 #pragma once
 #include "Game.h"
 #include <ctime>
+#include <iostream>
+#include <ostream>
+
 #include "renderer.h"
 #include "Utils.h"
 
@@ -16,8 +19,7 @@ Game::Game(int width, int height, vector<vector<int>> map)
 
 	// Add the player
 	RandomFreeTile(&x, &y);
-	m_gameState.playerX = x;
-	m_gameState.playerY = y;
+	m_gameState.player = { Player, x,y };
 
 	// Add some enemies	
 	RandomFreeTile(&x, &y);
@@ -57,29 +59,20 @@ bool Game::Passable(int xPos, int yPos)
 	return true;
 }
 
-void Game::MovePlayer(Direction direction)
+void Game::MoveEntity(Entity& entity, Direction direction)
 {
-	if (direction == Direction::Up		&& Passable(m_gameState.playerX, m_gameState.playerY + 1)) m_gameState.playerY += 1;
-	if (direction == Direction::Down	&& Passable(m_gameState.playerX, m_gameState.playerY - 1)) m_gameState.playerY -= 1;
-	if (direction == Direction::Left	&& Passable(m_gameState.playerX - 1, m_gameState.playerY)) m_gameState.playerX -= 1;
-	if (direction == Direction::Right	&& Passable(m_gameState.playerX + 1, m_gameState.playerY)) m_gameState.playerX += 1;
+	if (direction == Direction::Up		&& Passable(entity.xPos, entity.yPos + 1)) entity.yPos += 1;
+	if (direction == Direction::Down	&& Passable(entity.xPos, entity.yPos - 1)) entity.yPos -= 1;
+	if (direction == Direction::Left	&& Passable(entity.xPos - 1, entity.yPos)) entity.xPos -= 1;
+	if (direction == Direction::Right	&& Passable(entity.xPos + 1, entity.yPos)) entity.xPos += 1;
+	std::cout << entity.xPos << "," << entity.yPos << std::endl;
 }
 
 void Game::Update()
 {
 	// Move Enemies
-	for (Enemy& enemy : m_gameState.enemies)
+	for (Entity& enemy : m_gameState.enemies)
 	{
-		const int xOffset = ((rand() % 3) - 1);
-		const int yOffset = ((rand() % 3) - 1);
-		const int newX = enemy.xPos + xOffset;
-		const int newY = enemy.yPos + yOffset;
-
-		int targetValue;
-		if (Utils::GetGridTileValue(m_gameState.map, newX, newY, &targetValue) && targetValue == 0)
-		{
-			enemy.xPos = newX;
-			enemy.yPos = newY;
-		}
+		MoveEntity(enemy, (Direction)(rand() % 4));
 	}
 }

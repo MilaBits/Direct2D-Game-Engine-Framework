@@ -1,4 +1,7 @@
 #include "Input.h"
+
+#include <iostream>
+
 #include "win32_platform.h"
 using Clock = std::chrono::steady_clock;
 
@@ -26,10 +29,11 @@ void Input::Update()
 				if (duration.count() > 50)
 				{
 					start = Clock::now();
-					if (GetAsyncKeyState(VK_UP) || GetAsyncKeyState(0x57)) m_pGame->MovePlayer(Direction::Up);
-					if (GetAsyncKeyState(VK_DOWN) || GetAsyncKeyState(0x53)) m_pGame->MovePlayer(Direction::Down);
-					if (GetAsyncKeyState(VK_LEFT) || GetAsyncKeyState(0x41)) m_pGame->MovePlayer(Direction::Left);
-					if (GetAsyncKeyState(VK_RIGHT) || GetAsyncKeyState(0x44)) m_pGame->MovePlayer(Direction::Right);
+					Entity& player = m_pGame->GetGameState()->player;
+					if (GetAsyncKeyState(VK_UP)    || GetAsyncKeyState(0x57)) m_pGame->MoveEntity(player, Direction::Up);
+					if (GetAsyncKeyState(VK_DOWN)  || GetAsyncKeyState(0x53)) m_pGame->MoveEntity(player, Direction::Down);
+					if (GetAsyncKeyState(VK_LEFT)  || GetAsyncKeyState(0x41)) m_pGame->MoveEntity(player, Direction::Left);
+					if (GetAsyncKeyState(VK_RIGHT) || GetAsyncKeyState(0x44)) m_pGame->MoveEntity(player, Direction::Right);
 				}
 				//if (GetAsyncKeyState(VK_SPACE)) m_pGame->Regenerate(55, 8);
 

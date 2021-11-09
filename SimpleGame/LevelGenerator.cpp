@@ -56,20 +56,30 @@ vector<vector<int>> LevelGenerator::Simulate(vector<vector<int>>& map, vector<ve
 int LevelGenerator::CountAdjacent(vector<vector<int>> map, int x, int y)
 {
 	int count = 0;
-	for (int i = -1; i < 2; i++) {
-		for (int j = -1; j < 2; j++) {
+	for (int i = -1; i < 2; i++) 
+	{
+		for (int j = -1; j < 2; j++) 
+		{
 			int neighbourY = y + i;
 			int neighbourX = x + j;
 
+			// Center, skip
 			if (i == 0 && j == 0)
 			{
-				// Center, skip
+				continue; 
 			}
-			else if (neighbourX < 0 || neighbourY < 0 || neighbourX >= map[0].size() || neighbourY >= map.size()) {
-				count++; // Outside the border, +1
+
+			// Outside the border, +1
+			if (neighbourX < 0 || neighbourY < 0 || neighbourX >= map[0].size() || neighbourY >= map.size()) 
+			{
+				count++; 
+				continue;
 			}
-			else if (map[neighbourY][neighbourX]) {
-				count = count + 1; // Normal check of the neighbour
+
+			// Normal check of the neighbour
+			if (map[neighbourY][neighbourX])
+			{
+				count++; 
 			}
 		}
 	}

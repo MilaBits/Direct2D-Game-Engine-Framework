@@ -4,7 +4,7 @@
 
 using std::vector;
 
-struct Enemy
+struct Entity
 {
 	TextureId textureId;
 
@@ -20,10 +20,8 @@ struct GameState
 	vector<vector<int>> map;
 	vector<pair<int, int>> changedTiles;
 
-	vector<Enemy> enemies;
-
-	int playerX;
-	int playerY;
+	Entity player;
+	vector<Entity> enemies;
 
 	void ClearChangedTiles()
 	{
@@ -47,7 +45,7 @@ public:
 	void RandomFreeTile(int* x, int* y);
 	const vector<vector<int>> GetMap();
 	GameState* GetGameState();
-	void MovePlayer(Direction direction);
+	void MoveEntity(Entity& entity, Direction direction);
 	bool Passable(int xPos, int yPos);
 	void Update();
 

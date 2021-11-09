@@ -88,7 +88,6 @@ public:
 	void DrawGrid(vector<vector<int>> grid);
 	void Update(const GameState* pGameState);
 	void Render(HDC hdc) const;
-	void TriggerFullRedraw();
 	
 	// Draw content.
 	HRESULT OnRender();
@@ -130,7 +129,6 @@ private:
 	int m_textureSize = 8;
 	RenderState m_renderState = {};
 	GameState* m_pGameState;
-	bool fullRedraw = false;
 
 	void LoadTexture(TextureId texture, const char* name);
 

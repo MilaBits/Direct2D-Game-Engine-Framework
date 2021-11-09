@@ -74,8 +74,8 @@ HRESULT Renderer::Initialize()
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
-			static_cast<UINT>(ceil(640.f * dpiX / 96.f)),
-			static_cast<UINT>(ceil(480.f * dpiY / 96.f)),
+			static_cast<UINT>(ceil((m_renderState.width*4) * dpiX / 96.f)),
+			static_cast<UINT>(ceil((m_renderState.height*4) * dpiY / 96.f)),
 			NULL,
 			NULL,
 			HINST_THISCOMPONENT,
@@ -256,11 +256,6 @@ void Renderer::Render(HDC hdc) const
 	std::cout << "duration: " << (end - start) << "ms" << std::endl;
 }
 
-void Renderer::TriggerFullRedraw()
-{
-	fullRedraw = true;
-}
-
 HRESULT Renderer::OnRender()
 {
 	HRESULT hr = S_OK;
@@ -268,11 +263,13 @@ HRESULT Renderer::OnRender()
 
 	if (SUCCEEDED(hr))
 	{
-		m_pRenderTarget->BeginDraw();
-		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
-
 		D2D1_SIZE_F rtSize = m_pRenderTarget->GetSize();
+
+		m_pRenderTarget->BeginDraw();
+		D2D1_POINT_2F center = D2D1::Point2F(rtSize.width / 2.0f, rtSize.height / 2.0f);
+		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Scale(1,-1, center));
+		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+
 
 		ID2D1Bitmap* d2dBitmap;
 		D2D1_SIZE_U bitmapSize = D2D1::SizeU(m_renderState.width, m_renderState.height);
@@ -282,9 +279,8 @@ HRESULT Renderer::OnRender()
 		props.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE);
 		m_pRenderTarget->CreateBitmap(bitmapSize, m_renderState.memory, m_renderState.width*4 , props, &d2dBitmap);
 
-		D2D1_RECT_F windowRect = { 0,0,(float)bitmapSize.width, (float)bitmapSize.height };
-		m_pRenderTarget->DrawBitmap(d2dBitmap, windowRect);
-		//m_pRenderTarget->DrawRectangle({ 10,60,50,50 }, m_pCornflowerBlueBrush, 1);
+		D2D1_RECT_F windowRect = { 0,0,rtSize.width, rtSize.height };
+		m_pRenderTarget->DrawBitmap(d2dBitmap, windowRect, 1, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR); //todo: make it not stretch
 
 		hr = m_pRenderTarget->EndDraw();
 		std::cout << "OnRender"<<std::endl;
@@ -384,7 +380,6 @@ void Renderer::OnResize(UINT width, UINT height)
 		UpdateRenderState();
 		m_pRenderTarget->Resize(D2D1::SizeU(width, height));
 	}
-	std::cout << "OnResize" << std::endl;
 }
 
 void Renderer::LoadTexture(TextureId texture, const char* name)
@@ -424,17 +419,18 @@ void Renderer::ClearFullWindow(HDC hdc, unsigned int color) const
 
 void Renderer::Update(const GameState* pGameState)
 {
-	m_tilesToUpdate = pGameState->changedTiles;
-
+	// Draw Map
 	DrawGrid(pGameState->map);
-	fullRedraw = false;
 
-	DrawRectTexture(pGameState->playerX * m_textureSize, pGameState->playerY * m_textureSize, m_textureSize, m_textureSize, Player);
+	// Draw Player
+	DrawRectTexture(pGameState->player.xPos * m_textureSize, pGameState->player.yPos * m_textureSize, m_textureSize, m_textureSize, Player);
 
-	for (const Enemy &enemy : pGameState->enemies)
+	//Draw Enemies
+	for (const Entity &enemy : pGameState->enemies)
 	{
 		DrawRectTexture(enemy.xPos * m_textureSize, enemy.yPos * m_textureSize, m_textureSize, m_textureSize, enemy.textureId);
 	}
 
-	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASENOW);
+	// Tell window to redraw
+	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
